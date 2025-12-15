@@ -1,0 +1,10 @@
+graph TD
+    A[User] -->|Run CLI| B(main.py)
+    B -->|Read File| C[Markdown Parser]
+    C -->|Extract Text| D{Text Chunks}
+    D -->|Request Audio| E[Google TTS API]
+    E -->|Return Audio Content| F[Audio Assembler]
+    F -->|Save| G[Output MP3]
+    
+    style A fill:#f9f,stroke:#333
+    style E fill:#bbf,stroke:#333
