@@ -8,7 +8,7 @@ class GoogleTTS:
         self.language_code = language_code
         self.voice_name = voice_name
 
-    def synthesize(self, text_chunks: List[str], output_file: Path):
+    def synthesize(self, text_chunks: List[str], output_file: Path, is_ssml: bool = False):
         """
         Synthesizes audio from text chunks and saves to a single MP3 file.
         """
@@ -17,8 +17,11 @@ class GoogleTTS:
         for i, chunk in enumerate(text_chunks):
             if not chunk.strip():
                 continue
-                
-            input_text = texttospeech.SynthesisInput(text=chunk)
+            
+            if is_ssml:
+                input_text = texttospeech.SynthesisInput(ssml=chunk)
+            else:
+                input_text = texttospeech.SynthesisInput(text=chunk)
 
             # Note: voice selection can be more complex, keeping it simple for now
             voice_params = {"language_code": self.language_code}
