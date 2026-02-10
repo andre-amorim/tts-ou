@@ -19,6 +19,7 @@ def convert(
     language: str = typer.Option("en-US", help="Language code (e.g., en-US, en-GB)"),
     voice: str = typer.Option(None, help="Specific voice name (optional)"),
     optimize: bool = typer.Option(True, help="Enable AI text optimization (requires GOOGLE_API_KEY)"),
+    tier: str = typer.Option("free", help="Optimization tier: 'free' (API Key), 'paid' (Vertex AI), or 'auto' (free then paid)"),
 ):
     """
     Convert a Markdown file to MP3 audio.
@@ -38,19 +39,17 @@ def convert(
     is_ssml = False
     
     if optimize:
-        typer.echo("Optimizing text with AI Agent...")
+        typer.echo(f"Optimizing text with AI Agent ({tier} tier)...")
         try:
-            optimizer = TextOptimizer()
+            optimizer = TextOptimizer(tier=tier)
             # If optimization is successful, the result is "fluid text". 
-            # Note: We are currently NOT adding SSML tags in the optimizer, 
-            # but user requirement mentions setting tone via SSML. 
-            # The optimizer rewrites text to be 'fluid'. 
-            # If we wanted SSML, we'd need the optimizer to output SSML.
-            # For now, we assume optimized text is still plain text unless we change the prompt.
             final_text = optimizer.optimize(raw_text)
             typer.echo(f"Optimization complete. New size: {len(final_text)} characters.")
         except Exception as e:
-            typer.echo(f"Optimization failed: {e}. Proceeding with original text.", err=True)
+            # CRITICAL: Do not proceed if optimization fails. 
+            # This respects user intent and avoids unnecessary Google Cloud TTS costs for unoptimized text.
+            typer.echo(f"Optimization failed: {e}", err=True)
+            raise typer.Exit(code=1)
 
     # 3. Chunk for TTS
     # Google TTS has a limit per request (5000 bytes/chars).
